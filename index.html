@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Explorer Map - Discover Everything Around You</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Finding your location...</p>
+        </div>
+    </div>
+
+    <!-- Search bar -->
+    <div id="search-bar">
+        <input type="text" id="search-input" placeholder="Search for anything..." />
+        <button id="search-btn">🔍</button>
+        <button id="locate-btn" title="Go to my location">📍</button>
+    </div>
+
+    <!-- Filter panel toggle -->
+    <button id="filter-toggle">Filters</button>
+
+    <!-- Filter panel -->
+    <div id="filter-panel" class="hidden">
+        <h3>Show / Hide Categories</h3>
+        <div id="filter-list"></div>
+        <div class="filter-actions">
+            <button id="select-all-btn">Select All</button>
+            <button id="deselect-all-btn">Deselect All</button>
+        </div>
+        <h3>Data Sources</h3>
+        <div id="source-list"></div>
+        <button id="reload-btn">Reload Data</button>
+    </div>
+
+    <!-- Detail panel -->
+    <div id="detail-panel" class="hidden">
+        <button id="detail-close">&times;</button>
+        <div id="detail-content"></div>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend-toggle" title="Legend">?</div>
+    <div id="legend-panel" class="hidden">
+        <h3>Map Legend</h3>
+        <div id="legend-content"></div>
+    </div>
+
+    <!-- Stats bar -->
+    <div id="stats-bar">
+        <span id="poi-count">0 discoveries</span>
+        <span id="coords-display"></span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="categories.js"></script>
+    <script src="data-sources.js"></script>
+    <script src="detail-view.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
