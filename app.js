@@ -1,6 +1,7 @@
 /**
  * Explorer Map - Main application
  * Real-time location + real data from OSM, iNaturalist, Wikipedia
+ * Features: rotation/tilt, dead animal warnings, AI chat
  */
 
 // ==================== State ====================
@@ -11,6 +12,10 @@ let allPOIs = [];
 let activeFilters = new Set(Object.keys(CATEGORIES));
 let isLoadingData = false;
 let lastFetchBounds = null;
+
+// Rotation/tilt state
+let currentRotation = 0;
+let currentTilt = 0;
 
 window.userLat = undefined;
 window.userLon = undefined;
@@ -70,6 +75,8 @@ function init() {
 
     // UI events
     setupUI();
+    setupRotationControls();
+    setupTwoFingerRotation();
 }
 
 // ==================== Geolocation ====================
@@ -79,7 +86,6 @@ function startGeolocation() {
         return;
     }
 
-    // Get initial position
     navigator.geolocation.getCurrentPosition(
         (pos) => {
             const { latitude: lat, longitude: lon, accuracy } = pos.coords;
@@ -94,13 +100,11 @@ function startGeolocation() {
         (err) => {
             console.warn('Geolocation error:', err);
             hideLoading('Could not get location. Pan the map to explore!');
-            // Still let them use the map
             fetchDataForView();
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 
-    // Watch position for live tracking
     navigator.geolocation.watchPosition(
         (pos) => {
             const { latitude: lat, longitude: lon, accuracy } = pos.coords;
@@ -143,12 +147,94 @@ function updateCoordsDisplay(lat, lon) {
     document.getElementById('coords-display').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 }
 
+// ==================== Rotation & Tilt ====================
+function setupRotationControls() {
+    const rotSlider = document.getElementById('rotation-slider');
+    const tiltSlider = document.getElementById('tilt-slider');
+    const rotValue = document.getElementById('rotation-value');
+    const tiltValue = document.getElementById('tilt-value');
+
+    rotSlider.addEventListener('input', () => {
+        currentRotation = parseInt(rotSlider.value);
+        rotValue.textContent = `${currentRotation}°`;
+        applyTransform();
+    });
+
+    tiltSlider.addEventListener('input', () => {
+        currentTilt = parseInt(tiltSlider.value);
+        tiltValue.textContent = `${currentTilt}°`;
+        applyTransform();
+    });
+
+    document.getElementById('rotate-left-btn').addEventListener('click', () => {
+        currentRotation = (currentRotation - 45 + 360) % 360;
+        rotSlider.value = currentRotation;
+        rotValue.textContent = `${currentRotation}°`;
+        applyTransform();
+    });
+
+    document.getElementById('rotate-right-btn').addEventListener('click', () => {
+        currentRotation = (currentRotation + 45) % 360;
+        rotSlider.value = currentRotation;
+        rotValue.textContent = `${currentRotation}°`;
+        applyTransform();
+    });
+
+    document.getElementById('rotate-reset-btn').addEventListener('click', () => {
+        currentRotation = 0;
+        currentTilt = 0;
+        rotSlider.value = 0;
+        tiltSlider.value = 0;
+        rotValue.textContent = '0°';
+        tiltValue.textContent = '0°';
+        applyTransform();
+    });
+}
+
+function applyTransform() {
+    const wrapper = document.getElementById('map-wrapper');
+    wrapper.style.transform = `rotate(${currentRotation}deg) perspective(1200px) rotateX(${currentTilt}deg)`;
+}
+
+function setupTwoFingerRotation() {
+    const wrapper = document.getElementById('map-wrapper');
+    let initialAngle = null;
+    let initialRotation = 0;
+
+    wrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            const angle = getTouchAngle(e.touches[0], e.touches[1]);
+            initialAngle = angle;
+            initialRotation = currentRotation;
+        }
+    }, { passive: true });
+
+    wrapper.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialAngle !== null) {
+            const angle = getTouchAngle(e.touches[0], e.touches[1]);
+            const delta = angle - initialAngle;
+            currentRotation = (initialRotation + delta + 360) % 360;
+            document.getElementById('rotation-slider').value = Math.round(currentRotation);
+            document.getElementById('rotation-value').textContent = `${Math.round(currentRotation)}°`;
+            applyTransform();
+        }
+    }, { passive: true });
+
+    wrapper.addEventListener('touchend', () => {
+        initialAngle = null;
+    }, { passive: true });
+}
+
+function getTouchAngle(t1, t2) {
+    return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI;
+}
+
 // ==================== Data Fetching ====================
 async function fetchDataForView() {
     if (isLoadingData) return;
 
     const zoom = map.getZoom();
-    if (zoom < 10) return; // Too zoomed out
+    if (zoom < 10) return;
 
     const b = map.getBounds();
     const bounds = {
@@ -158,7 +244,6 @@ async function fetchDataForView() {
         west: b.getWest(),
     };
 
-    // Skip if bounds haven't changed much
     if (lastFetchBounds && boundsOverlap(lastFetchBounds, bounds) > 0.7) return;
 
     isLoadingData = true;
@@ -168,7 +253,6 @@ async function fetchDataForView() {
         const center = { lat: (bounds.north + bounds.south) / 2, lon: (bounds.east + bounds.west) / 2 };
         const newPOIs = await DataSources.fetchAll(bounds, center);
 
-        // Merge, dedup by id
         const existingIds = new Set(allPOIs.map(p => p.id));
         let added = 0;
         for (const poi of newPOIs) {
@@ -226,6 +310,13 @@ function renderMarkers() {
 }
 
 async function showDetail(poi) {
+    // Dead animal check BEFORE showing details
+    const analysis = DeadAnimalDetector.analyze(poi);
+    if (analysis.isDead) {
+        const proceed = await DeadAnimalDetector.showWarning(poi, analysis);
+        if (!proceed) return; // User chose to go back
+    }
+
     const panel = document.getElementById('detail-panel');
     const content = document.getElementById('detail-content');
 
@@ -238,6 +329,9 @@ async function showDetail(poi) {
         content.innerHTML = `<h2>${poi.title}</h2><p>Error loading details.</p>`;
         console.error(e);
     }
+
+    // Initialize AI Chat for this POI
+    AIChat.init(poi);
 
     // Fly to POI
     map.flyTo([poi.lat, poi.lon], Math.max(map.getZoom(), 16), { duration: 0.5 });
@@ -324,7 +418,6 @@ function buildFilterPanel() {
     }
     container.innerHTML = html;
 
-    // Wire up checkboxes
     container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', () => {
             const cat = cb.dataset.cat;
@@ -335,7 +428,6 @@ function buildFilterPanel() {
         });
     });
 
-    // Source toggles
     const sourceContainer = document.getElementById('source-list');
     sourceContainer.innerHTML = ['overpass', 'inaturalist', 'wikipedia'].map(s => {
         const checked = DataSources.enabledSources[s] ? 'checked' : '';
@@ -380,7 +472,6 @@ function doSearch() {
     const query = document.getElementById('search-input').value.trim().toLowerCase();
     if (!query) return;
 
-    // Search through existing POIs
     const results = allPOIs.filter(p =>
         p.title.toLowerCase().includes(query) ||
         (p.scientificName && p.scientificName.toLowerCase().includes(query)) ||
@@ -388,16 +479,13 @@ function doSearch() {
     );
 
     if (results.length > 0) {
-        // Show first result
         showDetail(results[0]);
 
-        // If multiple results, also fit bounds to show all
         if (results.length > 1) {
             const group = L.featureGroup(results.map(r => L.marker([r.lat, r.lon])));
             map.fitBounds(group.getBounds().pad(0.1));
         }
     } else {
-        // Geocode search via Nominatim
         fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`)
             .then(r => r.json())
             .then(data => {

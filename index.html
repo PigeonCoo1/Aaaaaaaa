@@ -10,7 +10,10 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div id="map"></div>
+    <!-- Map wrapper for rotation/tilt transforms -->
+    <div id="map-wrapper">
+        <div id="map"></div>
+    </div>
 
     <!-- Loading overlay -->
     <div id="loading-overlay">
@@ -25,6 +28,23 @@
         <input type="text" id="search-input" placeholder="Search for anything..." />
         <button id="search-btn">🔍</button>
         <button id="locate-btn" title="Go to my location">📍</button>
+    </div>
+
+    <!-- Rotation / tilt controls -->
+    <div id="rotation-controls">
+        <button id="rotate-left-btn" title="Rotate left 45°">↶</button>
+        <button id="rotate-reset-btn" title="Reset view">🧭</button>
+        <button id="rotate-right-btn" title="Rotate right 45°">↷</button>
+        <div class="rotation-slider-group">
+            <label>Rotate</label>
+            <input type="range" id="rotation-slider" min="0" max="360" value="0" />
+            <span id="rotation-value">0°</span>
+        </div>
+        <div class="rotation-slider-group">
+            <label>Tilt</label>
+            <input type="range" id="tilt-slider" min="0" max="60" value="0" />
+            <span id="tilt-value">0°</span>
+        </div>
     </div>
 
     <!-- Filter panel toggle -->
@@ -43,10 +63,57 @@
         <button id="reload-btn">Reload Data</button>
     </div>
 
+    <!-- Dead animal warning overlay -->
+    <div id="dead-warning-overlay" class="hidden">
+        <div id="dead-warning-box">
+            <div class="warning-icon">⚠️</div>
+            <h3>Content Warning</h3>
+            <p id="dead-warning-text"></p>
+            <div class="warning-confidence">
+                <div class="confidence-bar">
+                    <div id="confidence-fill"></div>
+                </div>
+                <span id="confidence-text"></span>
+            </div>
+            <div class="warning-actions">
+                <button id="warning-cancel-btn">Go Back</button>
+                <button id="warning-proceed-btn">I understand, show me</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Detail panel -->
     <div id="detail-panel" class="hidden">
         <button id="detail-close">&times;</button>
         <div id="detail-content"></div>
+        <!-- AI Chat section (appears inside detail panel) -->
+        <div id="ai-chat-section">
+            <div id="ai-chat-header">
+                <h3>Ask AI about this</h3>
+                <button id="ai-settings-btn" title="API Key Settings">⚙️</button>
+            </div>
+            <div id="ai-suggested-questions"></div>
+            <div id="ai-chat-messages"></div>
+            <div id="ai-chat-input-row">
+                <input type="text" id="ai-chat-input" placeholder="Ask anything about this..." />
+                <button id="ai-chat-send">Ask</button>
+            </div>
+            <div id="ai-chat-status"></div>
+        </div>
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div id="api-key-modal" class="hidden">
+        <div class="modal-box">
+            <h3>AI Settings</h3>
+            <p>Enter a free Google Gemini API key to ask AI questions. Get one free at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+            <input type="password" id="api-key-input" placeholder="Paste your Gemini API key..." />
+            <div class="modal-actions">
+                <button id="api-key-cancel">Cancel</button>
+                <button id="api-key-save">Save</button>
+            </div>
+            <p class="modal-note">Your key is stored locally in your browser only.</p>
+        </div>
     </div>
 
     <!-- Legend -->
@@ -66,6 +133,8 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="categories.js"></script>
     <script src="data-sources.js"></script>
+    <script src="dead-animal-detector.js"></script>
+    <script src="ai-chat.js"></script>
     <script src="detail-view.js"></script>
     <script src="app.js"></script>
 </body>
