@@ -11,6 +11,20 @@ body, html {
     overflow: hidden;
 }
 
+/* Map wrapper for rotation/tilt transforms */
+#map-wrapper {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease;
+    transform-origin: center center;
+    /* Extra size so edges aren't visible when rotated */
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+}
+
 #map {
     width: 100%;
     height: 100%;
@@ -78,6 +92,80 @@ body, html {
     transition: background 0.2s;
 }
 #search-bar button:hover { background: #eee; }
+
+/* ========== Rotation Controls ========== */
+#rotation-toggle-btn {
+    position: fixed;
+    top: 70px; left: 12px;
+    z-index: 1001;
+    background: #fff;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+#rotation-toggle-btn:hover { background: #f0f0f0; }
+#rotation-controls {
+    position: fixed;
+    top: 70px; left: 58px;
+    z-index: 1000;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 140px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+#rotation-controls.collapsed {
+    transform: scale(0.8) translateX(-20px);
+    opacity: 0;
+    pointer-events: none;
+}
+#rotation-controls button {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+#rotation-controls button:hover { background: #e0e0e0; }
+#rotation-controls .rotation-slider-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+#rotation-controls .rotation-slider-group label {
+    font-size: 11px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+#rotation-controls .rotation-slider-group input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+#rotation-controls .rotation-slider-group span {
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+}
 
 /* Filter toggle */
 #filter-toggle {
@@ -156,6 +244,96 @@ body, html {
 .filter-actions button:hover, #reload-btn:hover { background: #e8e8e8; }
 #reload-btn { margin-top: 10px; width: 100%; }
 
+/* ========== Dead Animal Warning ========== */
+#dead-warning-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+#dead-warning-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+.warning-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+#dead-warning-box h3 {
+    font-size: 20px;
+    color: #d32f2f;
+    margin-bottom: 10px;
+}
+#dead-warning-text {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    text-align: left;
+    margin-bottom: 16px;
+}
+#dead-warning-text ul {
+    padding-left: 18px;
+    margin-top: 6px;
+}
+#dead-warning-text li {
+    font-size: 13px;
+    color: #777;
+}
+.warning-confidence {
+    margin: 16px 0;
+}
+.confidence-bar {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+#confidence-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+#confidence-text {
+    font-size: 13px;
+    color: #888;
+    font-weight: 600;
+}
+.warning-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+.warning-actions button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#warning-cancel-btn {
+    background: #f5f5f5;
+    color: #333;
+}
+#warning-cancel-btn:hover { background: #e8e8e8; }
+#warning-proceed-btn {
+    background: #ff9800;
+    color: #fff;
+}
+#warning-proceed-btn:hover { background: #f57c00; }
+
 /* Detail panel */
 #detail-panel {
     position: fixed;
@@ -166,27 +344,41 @@ body, html {
     box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
     max-height: 80vh;
     overflow-y: auto;
-    padding: 20px;
+    padding: 0;
     transition: transform 0.3s ease;
 }
 #detail-panel.hidden {
     transform: translateY(100%);
 }
-#detail-close {
+/* Fixed header bar with close button - always visible */
+#detail-header-bar {
     position: sticky;
-    top: 0; right: 0;
-    float: right;
+    top: 0;
+    z-index: 20;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 20px 20px 0 0;
+}
+#detail-close {
     background: #f0f0f0;
     border: none;
-    width: 32px; height: 32px;
+    width: 40px; height: 40px;
     border-radius: 50%;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
     z-index: 10;
-    line-height: 32px;
+    line-height: 40px;
     text-align: center;
+    flex-shrink: 0;
 }
 #detail-close:hover { background: #ddd; }
+#detail-content {
+    padding: 4px 20px 0;
+}
 
 #detail-content h2 {
     font-size: 22px;
@@ -292,6 +484,199 @@ body, html {
     text-decoration: none;
 }
 .detail-directions-btn:hover { background: #1565c0; }
+
+/* ========== AI Chat Section ========== */
+#ai-chat-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 2px solid #e3f2fd;
+    background: #f8fbff;
+    margin: 20px -20px -20px;
+    padding: 20px;
+    border-radius: 0 0 0 0;
+}
+#ai-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+#ai-chat-header h3 {
+    font-size: 16px;
+    color: #1565c0;
+}
+#ai-settings-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+}
+#ai-settings-btn:hover { background: #e3f2fd; }
+
+#ai-suggested-questions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.suggested-q {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #1565c0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.suggested-q:hover { background: #bbdefb; }
+
+#ai-chat-messages {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+.ai-msg {
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 90%;
+}
+.ai-msg-user {
+    background: #1976d2;
+    color: #fff;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+.ai-msg-ai {
+    background: #f0f0f0;
+    color: #333;
+    border-bottom-left-radius: 4px;
+}
+.ai-msg-ai p { margin-bottom: 8px; }
+.ai-msg-ai p:last-child { margin-bottom: 0; }
+.ai-msg-ai code {
+    background: #e0e0e0;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.ai-copy-btn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    background: #f5f5f5;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+    margin-top: 6px;
+}
+.ai-copy-btn:hover { background: #e8e8e8; }
+
+#ai-chat-input-row {
+    display: flex;
+    gap: 8px;
+}
+#ai-chat-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    outline: none;
+}
+#ai-chat-input:focus { border-color: #1976d2; }
+#ai-chat-send {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#ai-chat-send:hover { background: #1565c0; }
+
+#ai-chat-status {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+}
+
+/* ========== API Key Modal ========== */
+#api-key-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+.modal-box h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+.modal-box p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+.modal-box a {
+    color: #1976d2;
+}
+.modal-box input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    outline: none;
+}
+.modal-box input:focus { border-color: #1976d2; }
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#api-key-cancel { background: #f5f5f5; color: #333; }
+#api-key-cancel:hover { background: #e8e8e8; }
+#api-key-save { background: #1976d2; color: #fff; }
+#api-key-save:hover { background: #1565c0; }
+.modal-note {
+    font-size: 11px !important;
+    color: #999 !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
 
 /* Legend */
 #legend-toggle {
@@ -410,4 +795,6 @@ body, html {
     #search-bar { width: calc(100vw - 24px); }
     #filter-panel { width: calc(100vw - 24px); right: 12px; }
     #detail-panel { max-height: 90vh; }
+    #detail-close { width: 44px; height: 44px; font-size: 28px; line-height: 44px; }
+    #rotation-controls { width: 120px; padding: 8px; }
 }
