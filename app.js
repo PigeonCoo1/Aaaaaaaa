@@ -76,7 +76,6 @@ function init() {
     // UI events
     setupUI();
     setupRotationControls();
-    setupTwoFingerRotation();
 }
 
 // ==================== Geolocation ====================
@@ -153,6 +152,14 @@ function setupRotationControls() {
     const tiltSlider = document.getElementById('tilt-slider');
     const rotValue = document.getElementById('rotation-value');
     const tiltValue = document.getElementById('tilt-value');
+    const panel = document.getElementById('rotation-controls');
+    const toggleBtn = document.getElementById('rotation-toggle-btn');
+
+    // Toggle panel open/closed
+    toggleBtn.addEventListener('click', () => {
+        panel.classList.toggle('collapsed');
+        toggleBtn.textContent = panel.classList.contains('collapsed') ? '🔄' : '✕';
+    });
 
     rotSlider.addEventListener('input', () => {
         currentRotation = parseInt(rotSlider.value);
@@ -194,39 +201,6 @@ function setupRotationControls() {
 function applyTransform() {
     const wrapper = document.getElementById('map-wrapper');
     wrapper.style.transform = `rotate(${currentRotation}deg) perspective(1200px) rotateX(${currentTilt}deg)`;
-}
-
-function setupTwoFingerRotation() {
-    const wrapper = document.getElementById('map-wrapper');
-    let initialAngle = null;
-    let initialRotation = 0;
-
-    wrapper.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            const angle = getTouchAngle(e.touches[0], e.touches[1]);
-            initialAngle = angle;
-            initialRotation = currentRotation;
-        }
-    }, { passive: true });
-
-    wrapper.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialAngle !== null) {
-            const angle = getTouchAngle(e.touches[0], e.touches[1]);
-            const delta = angle - initialAngle;
-            currentRotation = (initialRotation + delta + 360) % 360;
-            document.getElementById('rotation-slider').value = Math.round(currentRotation);
-            document.getElementById('rotation-value').textContent = `${Math.round(currentRotation)}°`;
-            applyTransform();
-        }
-    }, { passive: true });
-
-    wrapper.addEventListener('touchend', () => {
-        initialAngle = null;
-    }, { passive: true });
-}
-
-function getTouchAngle(t1, t2) {
-    return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI;
 }
 
 // ==================== Data Fetching ====================

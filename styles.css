@@ -94,9 +94,26 @@ body, html {
 #search-bar button:hover { background: #eee; }
 
 /* ========== Rotation Controls ========== */
-#rotation-controls {
+#rotation-toggle-btn {
     position: fixed;
     top: 70px; left: 12px;
+    z-index: 1001;
+    background: #fff;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+#rotation-toggle-btn:hover { background: #f0f0f0; }
+#rotation-controls {
+    position: fixed;
+    top: 70px; left: 58px;
     z-index: 1000;
     background: #fff;
     border-radius: 14px;
@@ -107,6 +124,12 @@ body, html {
     align-items: center;
     gap: 6px;
     width: 140px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+#rotation-controls.collapsed {
+    transform: scale(0.8) translateX(-20px);
+    opacity: 0;
+    pointer-events: none;
 }
 #rotation-controls button {
     background: #f5f5f5;
@@ -142,11 +165,6 @@ body, html {
     font-size: 12px;
     color: #555;
     font-weight: 600;
-}
-
-/* Top row buttons inline */
-#rotation-controls > div:first-of-type {
-    margin-top: 4px;
 }
 
 /* Filter toggle */
@@ -326,27 +344,41 @@ body, html {
     box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
     max-height: 80vh;
     overflow-y: auto;
-    padding: 20px;
+    padding: 0;
     transition: transform 0.3s ease;
 }
 #detail-panel.hidden {
     transform: translateY(100%);
 }
-#detail-close {
+/* Fixed header bar with close button - always visible */
+#detail-header-bar {
     position: sticky;
-    top: 0; right: 0;
-    float: right;
+    top: 0;
+    z-index: 20;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 20px 20px 0 0;
+}
+#detail-close {
     background: #f0f0f0;
     border: none;
-    width: 32px; height: 32px;
+    width: 40px; height: 40px;
     border-radius: 50%;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
     z-index: 10;
-    line-height: 32px;
+    line-height: 40px;
     text-align: center;
+    flex-shrink: 0;
 }
 #detail-close:hover { background: #ddd; }
+#detail-content {
+    padding: 4px 20px 0;
+}
 
 #detail-content h2 {
     font-size: 22px;
@@ -763,5 +795,6 @@ body, html {
     #search-bar { width: calc(100vw - 24px); }
     #filter-panel { width: calc(100vw - 24px); right: 12px; }
     #detail-panel { max-height: 90vh; }
+    #detail-close { width: 44px; height: 44px; font-size: 28px; line-height: 44px; }
     #rotation-controls { width: 120px; padding: 8px; }
 }

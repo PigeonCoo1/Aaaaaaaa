@@ -30,8 +30,11 @@
         <button id="locate-btn" title="Go to my location">📍</button>
     </div>
 
-    <!-- Rotation / tilt controls -->
-    <div id="rotation-controls">
+    <!-- Rotation toggle button -->
+    <button id="rotation-toggle-btn" title="Rotation & Tilt controls">🔄</button>
+
+    <!-- Rotation / tilt controls (starts collapsed) -->
+    <div id="rotation-controls" class="collapsed">
         <button id="rotate-left-btn" title="Rotate left 45°">↶</button>
         <button id="rotate-reset-btn" title="Reset view">🧭</button>
         <button id="rotate-right-btn" title="Rotate right 45°">↷</button>
@@ -84,7 +87,9 @@
 
     <!-- Detail panel -->
     <div id="detail-panel" class="hidden">
-        <button id="detail-close">&times;</button>
+        <div id="detail-header-bar">
+            <button id="detail-close">&times;</button>
+        </div>
         <div id="detail-content"></div>
         <!-- AI Chat section (appears inside detail panel) -->
         <div id="ai-chat-section">
